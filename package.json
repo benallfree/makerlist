@@ -1,0 +1,21 @@
+{
+  "name": "makerlist",
+  "type": "module",
+  "scripts": {
+    "dev": "serve -s app",
+    "deploy": "bun ./deploy.ts"
+  },
+  "devDependencies": {
+    "@samkirkland/ftp-deploy": "^1.2.4",
+    "@types/bun": "latest",
+    "prettier": "^3.3.3",
+    "prettier-plugin-ejs": "^1.0.3",
+    "serve": "^14.2.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "convex": "^1.14.4"
+  }
+}

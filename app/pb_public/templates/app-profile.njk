@@ -1,0 +1,29 @@
+{% extends "base.njk" %}
+
+{% block content %}
+  <h5>
+    <a href="/{{ maker.slug }}/{{ app.slug }}">{{ app.name }}</a>
+    <a href="{{ app.url }}" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+    {% if app.x %}
+      <a
+        href="https://x.com/{{ app.x }}"
+        target="_blank"
+        rel="noopener noreferrer"
+      ><i class="fa-brands fa-x-twitter"></i></a>
+    {% endif %}
+    {% if app.github %}
+      <a
+        href="https://github.com/{{ app.github.url }}"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <i class="fa-brands fa-github"></i>
+      </a>
+    {% endif %}
+  </h5>
+  <p>by <a href="/{{ maker.slug }}">{{ maker.name }}</a></p>
+  {% if app.mrr %}
+    <p><i class="fa-solid fa-dollar-sign"></i>{{ app.mrr  | formatNumber }} mrr</p>
+  {% endif %}
+  <p>{{ app.description }}</p>
+{% endblock %}

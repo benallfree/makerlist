@@ -1,14 +1,14 @@
 /// <reference path="../../pb_data/types.d.ts" />
 
-function pbhHandler(next) {
+function PocketPages(next) {
   const dbg = (...objs) => {
     console.log(JSON.stringify(objs, null, 2))
   }
 
-  dbg(`pbhHandler`)
+  dbg(`pocketpages`)
 
-  const ejs = require(`${__hooks}/ejs`)
-  const { existsSync } = require(`${__hooks}/ejs/fs`)
+  const ejs = require(`${__hooks}/pocketpages/ejs`)
+  const { existsSync } = require(`${__hooks}/pocketpages/fs`)
 
   const files = [
     ...$filepath.glob($filepath.join(__hooks, `routes`, `**/*.ejs`)),
@@ -124,4 +124,4 @@ function pbhHandler(next) {
   }
 }
 
-routerUse(pbhHandler)
+routerUse(PocketPages)

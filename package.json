@@ -17,5 +17,13 @@
   },
   "dependencies": {
     "convex": "^1.14.4"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "es5",
+    "plugins": [
+      "prettier-plugin-ejs"
+    ]
   }
 }

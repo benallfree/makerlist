@@ -16,7 +16,7 @@
  *
  */
 
-"use strict";
+'use strict'
 
 /**
  * @file Embedded JavaScript templating engine. {@link http://ejs.co}
@@ -44,38 +44,38 @@
  * @public
  */
 
-var fs = require("./fs");
-var path = require("./path");
-var utils = require("./utils");
+var fs = require('./fs')
+var path = require('./path')
+var utils = require('./utils')
 
-var scopeOptionWarned = false;
+var scopeOptionWarned = false
 /** @type {string} */
-var _VERSION_STRING = "0.0.1";
-var _DEFAULT_OPEN_DELIMITER = "<";
-var _DEFAULT_CLOSE_DELIMITER = ">";
-var _DEFAULT_DELIMITER = "%";
-var _DEFAULT_LOCALS_NAME = "locals";
-var _NAME = "ejs";
-var _REGEX_STRING = "(<%%|%%>|<%=|<%-|<%_|<%#|<%|%>|-%>|_%>)";
+var _VERSION_STRING = '0.0.1'
+var _DEFAULT_OPEN_DELIMITER = '<'
+var _DEFAULT_CLOSE_DELIMITER = '>'
+var _DEFAULT_DELIMITER = '%'
+var _DEFAULT_LOCALS_NAME = 'locals'
+var _NAME = 'ejs'
+var _REGEX_STRING = '(<%%|%%>|<%=|<%-|<%_|<%#|<%|%>|-%>|_%>)'
 var _OPTS_PASSABLE_WITH_DATA = [
-  "delimiter",
-  "scope",
-  "context",
-  "debug",
-  "compileDebug",
-  "client",
-  "_with",
-  "rmWhitespace",
-  "strict",
-  "filename",
-  "async",
-];
+  'delimiter',
+  'scope',
+  'context',
+  'debug',
+  'compileDebug',
+  'client',
+  '_with',
+  'rmWhitespace',
+  'strict',
+  'filename',
+  'async',
+]
 // We don't allow 'cache' option to be passed in the data obj for
 // the normal `render` call, but this is where Express 2 & 3 put it
 // so we make an exception for `renderFile`
-var _OPTS_PASSABLE_WITH_DATA_EXPRESS = _OPTS_PASSABLE_WITH_DATA.concat("cache");
-var _BOM = /^\uFEFF/;
-var _JS_IDENTIFIER = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
+var _OPTS_PASSABLE_WITH_DATA_EXPRESS = _OPTS_PASSABLE_WITH_DATA.concat('cache')
+var _BOM = /^\uFEFF/
+var _JS_IDENTIFIER = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/
 
 /**
  * EJS template function cache. This can be a LRU object from lru-cache NPM
@@ -85,7 +85,7 @@ var _JS_IDENTIFIER = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
  * @type {Cache}
  */
 
-exports.cache = utils.cache;
+exports.cache = utils.cache
 
 /**
  * Custom file loader. Useful for template preprocessing or restricting access
@@ -94,7 +94,7 @@ exports.cache = utils.cache;
  * @type {fileLoader}
  */
 
-exports.fileLoader = fs.readFileSync;
+exports.fileLoader = fs.readFileSync
 
 /**
  * Name of the object containing the locals.
@@ -106,7 +106,7 @@ exports.fileLoader = fs.readFileSync;
  * @public
  */
 
-exports.localsName = _DEFAULT_LOCALS_NAME;
+exports.localsName = _DEFAULT_LOCALS_NAME
 
 /**
  * Promise implementation -- defaults to the native implementation if available
@@ -116,7 +116,7 @@ exports.localsName = _DEFAULT_LOCALS_NAME;
  * @public
  */
 
-exports.promiseImpl = new Function("return this;")().Promise;
+exports.promiseImpl = new Function('return this;')().Promise
 
 /**
  * Get the path to the included file from the parent file path and the
@@ -128,16 +128,16 @@ exports.promiseImpl = new Function("return this;")().Promise;
  * @return {String}
  */
 exports.resolveInclude = function (name, filename, isDir) {
-  var dirname = path.dirname;
-  var extname = path.extname;
-  var resolve = path.resolve;
-  var includePath = resolve(isDir ? filename : dirname(filename), name);
-  var ext = extname(name);
+  var dirname = path.dirname
+  var extname = path.extname
+  var resolve = path.resolve
+  var includePath = resolve(isDir ? filename : dirname(filename), name)
+  var ext = extname(name)
   if (!ext) {
-    includePath += ".ejs";
+    includePath += '.ejs'
   }
-  return includePath;
-};
+  return includePath
+}
 
 /**
  * Try to resolve file path on multiple directories
@@ -147,14 +147,14 @@ exports.resolveInclude = function (name, filename, isDir) {
  * @return {String}
  */
 function resolvePaths(name, paths) {
-  var filePath;
+  var filePath
   if (
     paths.some(function (v) {
-      filePath = exports.resolveInclude(name, v, true);
-      return fs.existsSync(filePath);
+      filePath = exports.resolveInclude(name, v, true)
+      return fs.existsSync(filePath)
     })
   ) {
-    return filePath;
+    return filePath
   }
 }
 
@@ -166,42 +166,40 @@ function resolvePaths(name, paths) {
  * @return {String}
  */
 function getIncludePath(path, options) {
-  var includePath;
-  var filePath;
-  var views = options.views;
-  var match = /^[A-Za-z]+:\\|^\//.exec(path);
+  var includePath
+  var filePath
+  var views = options.views
+  var match = /^[A-Za-z]+:\\|^\//.exec(path)
 
   // Abs path
   if (match && match.length) {
-    path = path.replace(/^\/*/, "");
+    path = path.replace(/^\/*/, '')
     if (Array.isArray(options.root)) {
-      includePath = resolvePaths(path, options.root);
+      includePath = resolvePaths(path, options.root)
     } else {
-      includePath = exports.resolveInclude(path, options.root || "/", true);
+      includePath = exports.resolveInclude(path, options.root || '/', true)
     }
   }
   // Relative paths
   else {
     // Look relative to a passed filename first
     if (options.filename) {
-      filePath = exports.resolveInclude(path, options.filename);
+      filePath = exports.resolveInclude(path, options.filename)
       if (fs.existsSync(filePath)) {
-        includePath = filePath;
+        includePath = filePath
       }
     }
     // Then look in any views directories
     if (!includePath && Array.isArray(views)) {
-      includePath = resolvePaths(path, views);
+      includePath = resolvePaths(path, views)
     }
-    if (!includePath && typeof options.includer !== "function") {
+    if (!includePath && typeof options.includer !== 'function') {
       throw new Error(
-        'Could not find the include file "' +
-          options.escapeFunction(path) +
-          '"',
-      );
+        'Could not find the include file "' + options.escapeFunction(path) + '"'
+      )
     }
   }
-  return includePath;
+  return includePath
 }
 
 /**
@@ -223,35 +221,35 @@ function getIncludePath(path, options) {
  */
 
 function handleCache(options, template) {
-  var func;
-  var filename = options.filename;
-  var hasTemplate = arguments.length > 1;
+  var func
+  var filename = options.filename
+  var hasTemplate = arguments.length > 1
 
   if (options.cache) {
     if (!filename) {
-      throw new Error("cache option requires a filename");
+      throw new Error('cache option requires a filename')
     }
-    func = exports.cache.get(filename);
+    func = exports.cache.get(filename)
     if (func) {
-      return func;
+      return func
     }
     if (!hasTemplate) {
-      template = fileLoader(filename).toString().replace(_BOM, "");
+      template = fileLoader(filename).toString().replace(_BOM, '')
     }
   } else if (!hasTemplate) {
     // istanbul ignore if: should not happen at all
     if (!filename) {
       throw new Error(
-        "Internal EJS error: no file name or template " + "provided",
-      );
+        'Internal EJS error: no file name or template ' + 'provided'
+      )
     }
-    template = fileLoader(filename).toString().replace(_BOM, "");
+    template = fileLoader(filename).toString().replace(_BOM, '')
   }
-  func = exports.compile(template, options);
+  func = exports.compile(template, options)
   if (options.cache) {
-    exports.cache.set(filename, func);
+    exports.cache.set(filename, func)
   }
-  return func;
+  return func
 }
 
 /**
@@ -267,28 +265,28 @@ function handleCache(options, template) {
  */
 
 function tryHandleCache(options, data, cb) {
-  var result;
+  var result
   if (!cb) {
-    if (typeof exports.promiseImpl == "function") {
+    if (typeof exports.promiseImpl == 'function') {
       return new exports.promiseImpl(function (resolve, reject) {
         try {
-          result = handleCache(options)(data);
-          resolve(result);
+          result = handleCache(options)(data)
+          resolve(result)
         } catch (err) {
-          reject(err);
+          reject(err)
         }
-      });
+      })
     } else {
-      throw new Error("Please provide a callback function");
+      throw new Error('Please provide a callback function')
     }
   } else {
     try {
-      result = handleCache(options)(data);
+      result = handleCache(options)(data)
     } catch (err) {
-      return cb(err);
+      return cb(err)
     }
 
-    cb(null, result);
+    cb(null, result)
   }
 }
 
@@ -301,7 +299,7 @@ function tryHandleCache(options, data, cb) {
  */
 
 function fileLoader(filePath) {
-  return exports.fileLoader(filePath);
+  return exports.fileLoader(filePath)
 }
 
 /**
@@ -318,23 +316,20 @@ function fileLoader(filePath) {
  */
 
 function includeFile(path, options) {
-  var opts = utils.shallowCopy(
-    utils.createNullProtoObjWherePossible(),
-    options,
-  );
-  opts.filename = getIncludePath(path, opts);
-  if (typeof options.includer === "function") {
-    var includerResult = options.includer(path, opts.filename);
+  var opts = utils.shallowCopy(utils.createNullProtoObjWherePossible(), options)
+  opts.filename = getIncludePath(path, opts)
+  if (typeof options.includer === 'function') {
+    var includerResult = options.includer(path, opts.filename)
     if (includerResult) {
       if (includerResult.filename) {
-        opts.filename = includerResult.filename;
+        opts.filename = includerResult.filename
       }
       if (includerResult.template) {
-        return handleCache(opts, includerResult.template);
+        return handleCache(opts, includerResult.template)
       }
     }
   }
-  return handleCache(opts);
+  return handleCache(opts)
 }
 
 /**
@@ -352,29 +347,29 @@ function includeFile(path, options) {
  */
 
 function rethrow(err, str, flnm, lineno, esc) {
-  var lines = str.split("\n");
-  var start = Math.max(lineno - 3, 0);
-  var end = Math.min(lines.length, lineno + 3);
-  var filename = esc(flnm);
+  var lines = str.split('\n')
+  var start = Math.max(lineno - 3, 0)
+  var end = Math.min(lines.length, lineno + 3)
+  var filename = esc(flnm)
   // Error context
   var context = lines
     .slice(start, end)
     .map(function (line, i) {
-      var curr = i + start + 1;
-      return (curr == lineno ? " >> " : "    ") + curr + "| " + line;
+      var curr = i + start + 1
+      return (curr == lineno ? ' >> ' : '    ') + curr + '| ' + line
     })
-    .join("\n");
+    .join('\n')
 
   // Alter exception message
-  err.path = filename;
+  err.path = filename
   err.message =
-    (filename || "ejs") + ":" + lineno + "\n" + context + "\n\n" + err.message;
+    (filename || 'ejs') + ':' + lineno + '\n' + context + '\n\n' + err.message
 
-  throw err;
+  throw err
 }
 
 function stripSemi(str) {
-  return str.replace(/;(\s*$)/, "$1");
+  return str.replace(/;(\s*$)/, '$1')
 }
 
 /**
@@ -391,24 +386,24 @@ function stripSemi(str) {
  */
 
 exports.compile = function compile(template, opts) {
-  var templ;
+  var templ
 
   // v1 compat
   // 'scope' is 'context'
   // FIXME: Remove this in a future version
   if (opts && opts.scope) {
     if (!scopeOptionWarned) {
-      console.warn("`scope` option is deprecated and will be removed in EJS 3");
-      scopeOptionWarned = true;
+      console.warn('`scope` option is deprecated and will be removed in EJS 3')
+      scopeOptionWarned = true
     }
     if (!opts.context) {
-      opts.context = opts.scope;
+      opts.context = opts.scope
     }
-    delete opts.scope;
+    delete opts.scope
   }
-  templ = new Template(template, opts);
-  return templ.compile();
-};
+  templ = new Template(template, opts)
+  return templ.compile()
+}
 
 /**
  * Render the given `template` of ejs.
@@ -425,17 +420,17 @@ exports.compile = function compile(template, opts) {
  */
 
 exports.render = function (template, d, o) {
-  var data = d || utils.createNullProtoObjWherePossible();
-  var opts = o || utils.createNullProtoObjWherePossible();
+  var data = d || utils.createNullProtoObjWherePossible()
+  var opts = o || utils.createNullProtoObjWherePossible()
 
   // No options object -- if there are optiony names
   // in the data, copy them to options
   if (arguments.length == 2) {
-    utils.shallowCopyFromList(opts, data, _OPTS_PASSABLE_WITH_DATA);
+    utils.shallowCopyFromList(opts, data, _OPTS_PASSABLE_WITH_DATA)
   }
 
-  return handleCache(opts, template)(data);
-};
+  return handleCache(opts, template)(data)
+}
 
 /**
  * Render an EJS file at the given `path` and callback `cb(err, str)`.
@@ -451,25 +446,25 @@ exports.render = function (template, d, o) {
  */
 
 exports.renderFile = function () {
-  var args = Array.prototype.slice.call(arguments);
-  var filename = args.shift();
-  var cb;
-  var opts = { filename: filename };
-  var data;
-  var viewOpts;
+  var args = Array.prototype.slice.call(arguments)
+  var filename = args.shift()
+  var cb
+  var opts = { filename: filename }
+  var data
+  var viewOpts
 
   // Do we have a callback?
-  if (typeof arguments[arguments.length - 1] == "function") {
-    cb = args.pop();
+  if (typeof arguments[arguments.length - 1] == 'function') {
+    cb = args.pop()
   }
   // Do we have data/opts?
   if (args.length) {
     // Should always have data obj
-    data = args.shift();
+    data = args.shift()
     // Normal passed opts (data obj + opts obj)
     if (args.length) {
       // Use shallowCopy so we don't pollute passed in opts obj with new vals
-      utils.shallowCopy(opts, args.pop());
+      utils.shallowCopy(opts, args.pop())
     }
     // Special casing for Express (settings + opts-in-data)
     else {
@@ -477,29 +472,29 @@ exports.renderFile = function () {
       if (data.settings) {
         // Pull a few things from known locations
         if (data.settings.views) {
-          opts.views = data.settings.views;
+          opts.views = data.settings.views
         }
-        if (data.settings["view cache"]) {
-          opts.cache = true;
+        if (data.settings['view cache']) {
+          opts.cache = true
         }
         // Undocumented after Express 2, but still usable, esp. for
         // items that are unsafe to be passed along with data, like `root`
-        viewOpts = data.settings["view options"];
+        viewOpts = data.settings['view options']
         if (viewOpts) {
-          utils.shallowCopy(opts, viewOpts);
+          utils.shallowCopy(opts, viewOpts)
         }
       }
       // Express 2 and lower, values set in app.locals, or people who just
       // want to pass options in their data. NOTE: These values will override
       // anything previously set in settings  or settings['view options']
-      utils.shallowCopyFromList(opts, data, _OPTS_PASSABLE_WITH_DATA_EXPRESS);
+      utils.shallowCopyFromList(opts, data, _OPTS_PASSABLE_WITH_DATA_EXPRESS)
     }
-    opts.filename = filename;
+    opts.filename = filename
   } else {
-    data = utils.createNullProtoObjWherePossible();
+    data = utils.createNullProtoObjWherePossible()
   }
-  return tryHandleCache(opts, data, cb);
-};
+  return handleCache(opts)(data)
+}
 
 /**
  * Clear intermediate JavaScript cache. Calls {@link Cache#reset}.
@@ -510,171 +505,170 @@ exports.renderFile = function () {
  * EJS template class
  * @public
  */
-exports.Template = Template;
+exports.Template = Template
 
 exports.clearCache = function () {
-  exports.cache.reset();
-};
+  exports.cache.reset()
+}
 
 function Template(text, optsParam) {
-  var opts = utils.hasOwnOnlyObject(optsParam);
-  var options = utils.createNullProtoObjWherePossible();
-  this.templateText = text;
+  var opts = utils.hasOwnOnlyObject(optsParam)
+  var options = utils.createNullProtoObjWherePossible()
+  this.templateText = text
   /** @type {string | null} */
-  this.mode = null;
-  this.truncate = false;
-  this.currentLine = 1;
-  this.source = "";
-  options.client = opts.client || false;
-  options.escapeFunction =
-    opts.escape || opts.escapeFunction || utils.escapeXML;
-  options.compileDebug = opts.compileDebug !== false;
-  options.debug = !!opts.debug;
-  options.filename = opts.filename;
+  this.mode = null
+  this.truncate = false
+  this.currentLine = 1
+  this.source = ''
+  options.client = opts.client || false
+  options.escapeFunction = opts.escape || opts.escapeFunction || utils.escapeXML
+  options.compileDebug = opts.compileDebug !== false
+  options.debug = !!opts.debug
+  options.filename = opts.filename
   options.openDelimiter =
-    opts.openDelimiter || exports.openDelimiter || _DEFAULT_OPEN_DELIMITER;
+    opts.openDelimiter || exports.openDelimiter || _DEFAULT_OPEN_DELIMITER
   options.closeDelimiter =
-    opts.closeDelimiter || exports.closeDelimiter || _DEFAULT_CLOSE_DELIMITER;
-  options.delimiter = opts.delimiter || exports.delimiter || _DEFAULT_DELIMITER;
-  options.strict = opts.strict || false;
-  options.context = opts.context;
-  options.cache = opts.cache || false;
-  options.rmWhitespace = opts.rmWhitespace;
-  options.root = opts.root;
-  options.includer = opts.includer;
-  options.outputFunctionName = opts.outputFunctionName;
+    opts.closeDelimiter || exports.closeDelimiter || _DEFAULT_CLOSE_DELIMITER
+  options.delimiter = opts.delimiter || exports.delimiter || _DEFAULT_DELIMITER
+  options.strict = opts.strict || false
+  options.context = opts.context
+  options.cache = opts.cache || false
+  options.rmWhitespace = opts.rmWhitespace
+  options.root = opts.root
+  options.includer = opts.includer
+  options.outputFunctionName = opts.outputFunctionName
   options.localsName =
-    opts.localsName || exports.localsName || _DEFAULT_LOCALS_NAME;
-  options.views = opts.views;
-  options.async = opts.async;
-  options.destructuredLocals = opts.destructuredLocals;
+    opts.localsName || exports.localsName || _DEFAULT_LOCALS_NAME
+  options.views = opts.views
+  options.async = opts.async
+  options.destructuredLocals = opts.destructuredLocals
   options.legacyInclude =
-    typeof opts.legacyInclude != "undefined" ? !!opts.legacyInclude : true;
+    typeof opts.legacyInclude != 'undefined' ? !!opts.legacyInclude : true
 
   if (options.strict) {
-    options._with = false;
+    options._with = false
   } else {
-    options._with = typeof opts._with != "undefined" ? opts._with : true;
+    options._with = typeof opts._with != 'undefined' ? opts._with : true
   }
 
-  this.opts = options;
+  this.opts = options
 
-  this.regex = this.createRegex();
+  this.regex = this.createRegex()
 }
 
 Template.modes = {
-  EVAL: "eval",
-  ESCAPED: "escaped",
-  RAW: "raw",
-  COMMENT: "comment",
-  LITERAL: "literal",
-};
+  EVAL: 'eval',
+  ESCAPED: 'escaped',
+  RAW: 'raw',
+  COMMENT: 'comment',
+  LITERAL: 'literal',
+}
 
 Template.prototype = {
   createRegex: function () {
-    var str = _REGEX_STRING;
-    var delim = utils.escapeRegExpChars(this.opts.delimiter);
-    var open = utils.escapeRegExpChars(this.opts.openDelimiter);
-    var close = utils.escapeRegExpChars(this.opts.closeDelimiter);
-    str = str.replace(/%/g, delim).replace(/</g, open).replace(/>/g, close);
-    return new RegExp(str);
+    var str = _REGEX_STRING
+    var delim = utils.escapeRegExpChars(this.opts.delimiter)
+    var open = utils.escapeRegExpChars(this.opts.openDelimiter)
+    var close = utils.escapeRegExpChars(this.opts.closeDelimiter)
+    str = str.replace(/%/g, delim).replace(/</g, open).replace(/>/g, close)
+    return new RegExp(str)
   },
 
   compile: function () {
     /** @type {string} */
-    var src;
+    var src
     /** @type {ClientFunction} */
-    var fn;
-    var opts = this.opts;
-    var prepended = "";
-    var appended = "";
+    var fn
+    var opts = this.opts
+    var prepended = ''
+    var appended = ''
     /** @type {EscapeCallback} */
-    var escapeFn = opts.escapeFunction;
+    var escapeFn = opts.escapeFunction
     /** @type {FunctionConstructor} */
-    var ctor;
+    var ctor
     /** @type {string} */
     var sanitizedFilename = opts.filename
       ? JSON.stringify(opts.filename)
-      : "undefined";
+      : 'undefined'
 
     if (!this.source) {
-      this.generateSource();
+      this.generateSource()
       prepended +=
         '  var __output = "";\n' +
-        "  function __append(s) { if (s !== undefined && s !== null) __output += s }\n";
+        '  function __append(s) { if (s !== undefined && s !== null) __output += s }\n'
       if (opts.outputFunctionName) {
         if (!_JS_IDENTIFIER.test(opts.outputFunctionName)) {
-          throw new Error("outputFunctionName is not a valid JS identifier.");
+          throw new Error('outputFunctionName is not a valid JS identifier.')
         }
-        prepended += "  var " + opts.outputFunctionName + " = __append;" + "\n";
+        prepended += '  var ' + opts.outputFunctionName + ' = __append;' + '\n'
       }
       if (opts.localsName && !_JS_IDENTIFIER.test(opts.localsName)) {
-        throw new Error("localsName is not a valid JS identifier.");
+        throw new Error('localsName is not a valid JS identifier.')
       }
       if (opts.destructuredLocals && opts.destructuredLocals.length) {
         var destructuring =
-          "  var __locals = (" + opts.localsName + " || {}),\n";
+          '  var __locals = (' + opts.localsName + ' || {}),\n'
         for (var i = 0; i < opts.destructuredLocals.length; i++) {
-          var name = opts.destructuredLocals[i];
+          var name = opts.destructuredLocals[i]
           if (!_JS_IDENTIFIER.test(name)) {
             throw new Error(
-              "destructuredLocals[" + i + "] is not a valid JS identifier.",
-            );
+              'destructuredLocals[' + i + '] is not a valid JS identifier.'
+            )
           }
           if (i > 0) {
-            destructuring += ",\n  ";
+            destructuring += ',\n  '
           }
-          destructuring += name + " = __locals." + name;
+          destructuring += name + ' = __locals.' + name
         }
-        prepended += destructuring + ";\n";
+        prepended += destructuring + ';\n'
       }
       if (opts._with !== false) {
-        prepended += "  with (" + opts.localsName + " || {}) {" + "\n";
-        appended += "  }" + "\n";
+        prepended += '  with (' + opts.localsName + ' || {}) {' + '\n'
+        appended += '  }' + '\n'
       }
-      appended += "  return __output;" + "\n";
-      this.source = prepended + this.source + appended;
+      appended += '  return __output;' + '\n'
+      this.source = prepended + this.source + appended
     }
 
     if (opts.compileDebug) {
       src =
-        "var __line = 1" +
-        "\n" +
-        "  , __lines = " +
+        'var __line = 1' +
+        '\n' +
+        '  , __lines = ' +
         JSON.stringify(this.templateText) +
-        "\n" +
-        "  , __filename = " +
+        '\n' +
+        '  , __filename = ' +
         sanitizedFilename +
-        ";" +
-        "\n" +
-        "try {" +
-        "\n" +
+        ';' +
+        '\n' +
+        'try {' +
+        '\n' +
         this.source +
-        "} catch (e) {" +
-        "\n" +
-        "  rethrow(e, __lines, __filename, __line, escapeFn);" +
-        "\n" +
-        "}" +
-        "\n";
+        '} catch (e) {' +
+        '\n' +
+        '  rethrow(e, __lines, __filename, __line, escapeFn);' +
+        '\n' +
+        '}' +
+        '\n'
     } else {
-      src = this.source;
+      src = this.source
     }
 
     if (opts.client) {
-      src = "escapeFn = escapeFn || " + escapeFn.toString() + ";" + "\n" + src;
+      src = 'escapeFn = escapeFn || ' + escapeFn.toString() + ';' + '\n' + src
       if (opts.compileDebug) {
-        src = "rethrow = rethrow || " + rethrow.toString() + ";" + "\n" + src;
+        src = 'rethrow = rethrow || ' + rethrow.toString() + ';' + '\n' + src
       }
     }
 
     if (opts.strict) {
-      src = '"use strict";\n' + src;
+      src = '"use strict";\n' + src
     }
     if (opts.debug) {
-      console.log(src);
+      console.log(src)
     }
     if (opts.compileDebug && opts.filename) {
-      src = src + "\n" + "//# sourceURL=" + sanitizedFilename + "\n";
+      src = src + '\n' + '//# sourceURL=' + sanitizedFilename + '\n'
     }
 
     try {
@@ -682,35 +676,35 @@ Template.prototype = {
         // Have to use generated function for this, since in envs without support,
         // it breaks in parsing
         try {
-          ctor = new Function("return (async function(){}).constructor;")();
+          ctor = new Function('return (async function(){}).constructor;')()
         } catch (e) {
           if (e instanceof SyntaxError) {
-            throw new Error("This environment does not support async/await");
+            throw new Error('This environment does not support async/await')
           } else {
-            throw e;
+            throw e
           }
         }
       } else {
-        ctor = Function;
+        ctor = Function
       }
-      fn = new ctor(opts.localsName + ", escapeFn, include, rethrow", src);
+      fn = new ctor(opts.localsName + ', escapeFn, include, rethrow', src)
     } catch (e) {
       // istanbul ignore else
       if (e instanceof SyntaxError) {
         if (opts.filename) {
-          e.message += " in " + opts.filename;
+          e.message += ' in ' + opts.filename
         }
-        e.message += " while compiling ejs\n\n";
+        e.message += ' while compiling ejs\n\n'
         e.message +=
-          "If the above error is not helpful, you may want to try EJS-Lint:\n";
-        e.message += "https://github.com/RyanZim/EJS-Lint";
+          'If the above error is not helpful, you may want to try EJS-Lint:\n'
+        e.message += 'https://github.com/RyanZim/EJS-Lint'
         if (!opts.async) {
-          e.message += "\n";
+          e.message += '\n'
           e.message +=
-            "Or, if you meant to create an async function, pass `async: true` as an option.";
+            'Or, if you meant to create an async function, pass `async: true` as an option.'
         }
       }
-      throw e;
+      throw e
     }
 
     // Return a callable function which will execute the function
@@ -722,62 +716,62 @@ Template.prototype = {
           var include = function (path, includeData) {
             var d = utils.shallowCopy(
               utils.createNullProtoObjWherePossible(),
-              data,
-            );
+              data
+            )
             if (includeData) {
-              d = utils.shallowCopy(d, includeData);
+              d = utils.shallowCopy(d, includeData)
             }
-            return includeFile(path, opts)(d);
-          };
+            return includeFile(path, opts)(d)
+          }
           return fn.apply(opts.context, [
             data || utils.createNullProtoObjWherePossible(),
             escapeFn,
             include,
             rethrow,
-          ]);
-        };
-    if (opts.filename && typeof Object.defineProperty === "function") {
-      var filename = opts.filename;
-      var basename = path.basename(filename, path.extname(filename));
+          ])
+        }
+    if (opts.filename && typeof Object.defineProperty === 'function') {
+      var filename = opts.filename
+      var basename = path.basename(filename, path.extname(filename))
       try {
-        Object.defineProperty(returnedFn, "name", {
+        Object.defineProperty(returnedFn, 'name', {
           value: basename,
           writable: false,
           enumerable: false,
           configurable: true,
-        });
+        })
       } catch (e) {
         /* ignore */
       }
     }
-    return returnedFn;
+    return returnedFn
   },
 
   generateSource: function () {
-    var opts = this.opts;
+    var opts = this.opts
 
     if (opts.rmWhitespace) {
       // Have to use two separate replace here as `^` and `$` operators don't
       // work well with `\r` and empty lines don't work well with the `m` flag.
       this.templateText = this.templateText
-        .replace(/[\r\n]+/g, "\n")
-        .replace(/^\s+|\s+$/gm, "");
+        .replace(/[\r\n]+/g, '\n')
+        .replace(/^\s+|\s+$/gm, '')
     }
 
     // Slurp spaces and tabs before <%_ and after _%>
     this.templateText = this.templateText
-      .replace(/[ \t]*<%_/gm, "<%_")
-      .replace(/_%>[ \t]*/gm, "_%>");
+      .replace(/[ \t]*<%_/gm, '<%_')
+      .replace(/_%>[ \t]*/gm, '_%>')
 
-    var self = this;
-    var matches = this.parseTemplateText();
-    var d = this.opts.delimiter;
-    var o = this.opts.openDelimiter;
-    var c = this.opts.closeDelimiter;
+    var self = this
+    var matches = this.parseTemplateText()
+    var d = this.opts.delimiter
+    var o = this.opts.openDelimiter
+    var c = this.opts.closeDelimiter
 
     if (matches && matches.length) {
       matches.forEach(function (line, index) {
-        var closing;
+        var closing
         // If this is an opening tag, check for closing tags
         // FIXME: May end up with some false positives here
         // Better to store modes as k/v with openDelimiter + delimiter as key
@@ -787,49 +781,49 @@ Template.prototype = {
           line.indexOf(o + d + d) !== 0
         ) {
           // and is not escaped
-          closing = matches[index + 2];
+          closing = matches[index + 2]
           if (
             !(
               closing == d + c ||
-              closing == "-" + d + c ||
-              closing == "_" + d + c
+              closing == '-' + d + c ||
+              closing == '_' + d + c
             )
           ) {
             throw new Error(
-              'Could not find matching close tag for "' + line + '".',
-            );
+              'Could not find matching close tag for "' + line + '".'
+            )
           }
         }
-        self.scanLine(line);
-      });
+        self.scanLine(line)
+      })
     }
   },
 
   parseTemplateText: function () {
-    var str = this.templateText;
-    var pat = this.regex;
-    var result = pat.exec(str);
-    var arr = [];
-    var firstPos;
+    var str = this.templateText
+    var pat = this.regex
+    var result = pat.exec(str)
+    var arr = []
+    var firstPos
 
     while (result) {
-      firstPos = result.index;
+      firstPos = result.index
 
       if (firstPos !== 0) {
-        arr.push(str.substring(0, firstPos));
-        str = str.slice(firstPos);
+        arr.push(str.substring(0, firstPos))
+        str = str.slice(firstPos)
       }
 
-      arr.push(result[0]);
-      str = str.slice(result[0].length);
-      result = pat.exec(str);
+      arr.push(result[0])
+      str = str.slice(result[0].length)
+      result = pat.exec(str)
     }
 
     if (str) {
-      arr.push(str);
+      arr.push(str)
     }
 
-    return arr;
+    return arr
   },
 
   _addOutput: function (line) {
@@ -839,69 +833,69 @@ Template.prototype = {
       // after the tag that the truncation mode replaces
       // Handle Win / Unix / old Mac linebreaks -- do the \r\n
       // combo first in the regex-or
-      line = line.replace(/^(?:\r\n|\r|\n)/, "");
-      this.truncate = false;
+      line = line.replace(/^(?:\r\n|\r|\n)/, '')
+      this.truncate = false
     }
     if (!line) {
-      return line;
+      return line
     }
 
     // Preserve literal slashes
-    line = line.replace(/\\/g, "\\\\");
+    line = line.replace(/\\/g, '\\\\')
 
     // Convert linebreaks
-    line = line.replace(/\n/g, "\\n");
-    line = line.replace(/\r/g, "\\r");
+    line = line.replace(/\n/g, '\\n')
+    line = line.replace(/\r/g, '\\r')
 
     // Escape double-quotes
     // - this will be the delimiter during execution
-    line = line.replace(/"/g, '\\"');
-    this.source += '    ; __append("' + line + '")' + "\n";
+    line = line.replace(/"/g, '\\"')
+    this.source += '    ; __append("' + line + '")' + '\n'
   },
 
   scanLine: function (line) {
-    var self = this;
-    var d = this.opts.delimiter;
-    var o = this.opts.openDelimiter;
-    var c = this.opts.closeDelimiter;
-    var newLineCount = 0;
+    var self = this
+    var d = this.opts.delimiter
+    var o = this.opts.openDelimiter
+    var c = this.opts.closeDelimiter
+    var newLineCount = 0
 
-    newLineCount = line.split("\n").length - 1;
+    newLineCount = line.split('\n').length - 1
 
     switch (line) {
       case o + d:
-      case o + d + "_":
-        this.mode = Template.modes.EVAL;
-        break;
-      case o + d + "=":
-        this.mode = Template.modes.ESCAPED;
-        break;
-      case o + d + "-":
-        this.mode = Template.modes.RAW;
-        break;
-      case o + d + "#":
-        this.mode = Template.modes.COMMENT;
-        break;
+      case o + d + '_':
+        this.mode = Template.modes.EVAL
+        break
+      case o + d + '=':
+        this.mode = Template.modes.ESCAPED
+        break
+      case o + d + '-':
+        this.mode = Template.modes.RAW
+        break
+      case o + d + '#':
+        this.mode = Template.modes.COMMENT
+        break
       case o + d + d:
-        this.mode = Template.modes.LITERAL;
+        this.mode = Template.modes.LITERAL
         this.source +=
-          '    ; __append("' + line.replace(o + d + d, o + d) + '")' + "\n";
-        break;
+          '    ; __append("' + line.replace(o + d + d, o + d) + '")' + '\n'
+        break
       case d + d + c:
-        this.mode = Template.modes.LITERAL;
+        this.mode = Template.modes.LITERAL
         this.source +=
-          '    ; __append("' + line.replace(d + d + c, d + c) + '")' + "\n";
-        break;
+          '    ; __append("' + line.replace(d + d + c, d + c) + '")' + '\n'
+        break
       case d + c:
-      case "-" + d + c:
-      case "_" + d + c:
+      case '-' + d + c:
+      case '_' + d + c:
         if (this.mode == Template.modes.LITERAL) {
-          this._addOutput(line);
+          this._addOutput(line)
         }
 
-        this.mode = null;
-        this.truncate = line.indexOf("-") === 0 || line.indexOf("_") === 0;
-        break;
+        this.mode = null
+        this.truncate = line.indexOf('-') === 0 || line.indexOf('_') === 0
+        break
       default:
         // In script mode, depends on type of tag
         if (this.mode) {
@@ -910,45 +904,45 @@ Template.prototype = {
             case Template.modes.EVAL:
             case Template.modes.ESCAPED:
             case Template.modes.RAW:
-              if (line.lastIndexOf("//") > line.lastIndexOf("\n")) {
-                line += "\n";
+              if (line.lastIndexOf('//') > line.lastIndexOf('\n')) {
+                line += '\n'
               }
           }
           switch (this.mode) {
             // Just executing code
             case Template.modes.EVAL:
-              this.source += "    ; " + line + "\n";
-              break;
+              this.source += '    ; ' + line + '\n'
+              break
             // Exec, esc, and output
             case Template.modes.ESCAPED:
               this.source +=
-                "    ; __append(escapeFn(" + stripSemi(line) + "))" + "\n";
-              break;
+                '    ; __append(escapeFn(' + stripSemi(line) + '))' + '\n'
+              break
             // Exec and output
             case Template.modes.RAW:
-              this.source += "    ; __append(" + stripSemi(line) + ")" + "\n";
-              break;
+              this.source += '    ; __append(' + stripSemi(line) + ')' + '\n'
+              break
             case Template.modes.COMMENT:
               // Do nothing
-              break;
+              break
             // Literal <%% mode, append as raw output
             case Template.modes.LITERAL:
-              this._addOutput(line);
-              break;
+              this._addOutput(line)
+              break
           }
         }
         // In string mode, just add the output
         else {
-          this._addOutput(line);
+          this._addOutput(line)
         }
     }
 
     if (self.opts.compileDebug && newLineCount) {
-      this.currentLine += newLineCount;
-      this.source += "    ; __line = " + this.currentLine + "\n";
+      this.currentLine += newLineCount
+      this.source += '    ; __line = ' + this.currentLine + '\n'
     }
   },
-};
+}
 
 /**
  * Escape characters reserved in XML.
@@ -962,7 +956,7 @@ Template.prototype = {
  * @public
  * @func
  * */
-exports.escapeXML = utils.escapeXML;
+exports.escapeXML = utils.escapeXML
 
 /**
  * Express.js support.
@@ -973,7 +967,7 @@ exports.escapeXML = utils.escapeXML;
  * @func
  */
 
-exports.__express = exports.renderFile;
+exports.__express = exports.renderFile
 
 /**
  * Version of EJS.
@@ -983,7 +977,7 @@ exports.__express = exports.renderFile;
  * @public
  */
 
-exports.VERSION = _VERSION_STRING;
+exports.VERSION = _VERSION_STRING
 
 /**
  * Name for detection of EJS.
@@ -993,9 +987,9 @@ exports.VERSION = _VERSION_STRING;
  * @public
  */
 
-exports.name = _NAME;
+exports.name = _NAME
 
 /* istanbul ignore if */
-if (typeof window != "undefined") {
-  window.ejs = exports;
+if (typeof window != 'undefined') {
+  window.ejs = exports
 }

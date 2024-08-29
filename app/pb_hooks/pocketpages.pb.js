@@ -11,8 +11,11 @@ function PocketPages(next) {
 
   dbg({ routesRoot })
 
+  dbg(`Loading marked`)
   const { marked } = require(`${__hooks}/pocketpages/marked`)
+  dbg(`Loading ejs`)
   const ejs = require(`${__hooks}/pocketpages/ejs`)
+  dbg(`Loading fs`)
   const { existsSync, readFileSync } = require(`${__hooks}/pocketpages/fs`)
 
   const files = [

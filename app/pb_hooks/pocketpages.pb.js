@@ -7,13 +7,22 @@ function PocketPages(next) {
 
   dbg(`pocketpages`)
 
+  const routesRoot = $filepath.join(__hooks, `..`, `pages`)
+
+  dbg({ routesRoot })
+
+  const { marked } = require(`${__hooks}/pocketpages/marked`)
   const ejs = require(`${__hooks}/pocketpages/ejs`)
-  const { existsSync } = require(`${__hooks}/pocketpages/fs`)
+  const { existsSync, readFileSync } = require(`${__hooks}/pocketpages/fs`)
 
   const files = [
-    ...$filepath.glob($filepath.join(__hooks, `routes`, `**/*.ejs`)),
-    ...$filepath.glob($filepath.join(__hooks, `routes`, `*.ejs`)),
-  ].map((f) => f.replace(__hooks, '').replace(`/routes/`, ''))
+    ...$filepath.glob($filepath.join(routesRoot, `**/*.ejs`)),
+    ...$filepath.glob($filepath.join(routesRoot, `**/*.md`)),
+    ...$filepath.glob($filepath.join(routesRoot, `*.ejs`)),
+    ...$filepath.glob($filepath.join(routesRoot, `*.md`)),
+  ].map((f) => f.replace(routesRoot, '').slice(1))
+
+  dbg({ files })
 
   const routes = files.map((f) => {
     const parts = f.split('/')
@@ -28,6 +37,8 @@ function PocketPages(next) {
     })
   })
 
+  dbg({ routes })
+
   return (/** @type {echo.Context} */ c) => {
     const { url } = c.request()
     if (url?.path.startsWith('/_') || url?.path.startsWith(`/api`)) {
@@ -37,90 +48,95 @@ function PocketPages(next) {
     const params = {}
 
     const urlPath = url.path.slice(1)
-    // dbg({ urlPath })
-    const parts = [...urlPath.split('/'), `index.ejs`].filter((p) => p)
-    // dbg({ parts })
+    dbg({ urlPath })
 
     const matchedRoute = (() => {
-      const routeCandidates = routes.filter((r) => r.length === parts.length)
-      // dbg({ routeCandidates })
-      for (const route of routeCandidates) {
-        const matched = route.every((r, i) => {
-          if (r.paramName) {
-            params[r.paramName] = parts[i]
-            return true
+      const exts = [
+        `${urlPath}.ejs`,
+        `${urlPath}.md`,
+        `${urlPath}/index.ejs`,
+        `${urlPath}/index.md`,
+      ]
+      for (const ext of exts) {
+        const parts = ext.split('/').filter((p) => p)
+        dbg({ parts })
+
+        const routeCandidates = routes.filter((r) => r.length === parts.length)
+        // dbg({ routeCandidates })
+        for (const route of routeCandidates) {
+          const matched = route.every((r, i) => {
+            if (r.paramName) {
+              params[r.paramName] = parts[i]
+              return true
+            }
+            return r.nodeName === parts[i]
+          })
+          if (matched) {
+            // dbg(`Matched route`, route)
+            return route
           }
-          return r.nodeName === parts[i]
-        })
-        if (matched) {
-          // dbg(`Matched route`, route)
-          return route
         }
       }
       return null
     })()
+
     if (!matchedRoute) {
       return next(c)
     }
+    dbg(`Found a matching route`, { matchedRoute })
+
     const fname = $filepath.join(
-      __hooks,
-      `routes`,
+      routesRoot,
       ...matchedRoute.map((r) => r.nodeName)
     )
-    // dbg({ matchedRoute, fname })
+    dbg(`Entry point filename is`, { fname })
 
     const context = { ctx: c, params, dbg }
 
-    const renderInLayout = (fname, slot, finalCb) => {
+    const renderInLayout = (fname, slot) => {
       // dbg(`renderInLayout`, { fname, slot })
-      if (!fname.startsWith(__hooks)) {
-        finalCb(null, slot)
-        return
+      if (!fname.startsWith(routesRoot)) {
+        return slot
       }
       const tryFile = $filepath.join($filepath.dir(fname), `+layout.ejs`)
       const layoutExists = existsSync(tryFile)
       // dbg({ tryFile, layoutExists })
       if (layoutExists) {
         // dbg(`layout found`, { tryFile })
-        ejs.renderFile(tryFile, { ...context, slot }, {}, function (err, str) {
-          if (err) {
-            finalCb(new BadRequestError(`${err}`), str)
-          }
-          renderInLayout($filepath.dir(tryFile), str, finalCb)
-        })
+        try {
+          const str = ejs.renderFile(tryFile, { ...context, slot })
+          return renderInLayout($filepath.dir(tryFile), str)
+        } catch (e) {
+          throw new BadRequestError(`${e}`)
+        }
       } else {
         // dbg(`layout not found`, { tryFile })
-        renderInLayout($filepath.dir(tryFile), slot, finalCb)
+        return renderInLayout($filepath.dir(tryFile), slot)
       }
     }
 
-    const serverFname = $filepath.join($filepath.dir(fname), `+server.js`)
-    dbg({ serverFname, exists: existsSync(serverFname) })
-    if (existsSync(serverFname)) {
-      dbg(`server file exists`, { serverFname })
-      const server = require(serverFname)
-      dbg(`server is`, Object.keys(server))
-      for (const key in server) {
-        dbg(`bundle key`, { key })
-        context[key] = server[key]
-      }
-    }
-    ejs.renderFile(fname, context, {}, function (err, str) {
-      if (err) {
-        throw new BadRequestError(`${err}`)
-      }
-      try {
-        const parsed = JSON.parse(str)
-        c.json(200, parsed)
-      } catch {
-        renderInLayout(fname, str, (err, finalOutput) => {
-          if (err) {
-            throw new BadRequestError(`${err}`)
+    try {
+      const str = (() => {
+        if (fname.endsWith('.md')) {
+          const md = readFileSync(fname)
+          return marked(md)
+        }
+        if (fname.endsWith('.ejs')) {
+          const str = ejs.renderFile(fname, context)
+          try {
+            const parsed = JSON.parse(str)
+            c.json(200, parsed)
+          } catch {
+            return str
           }
-          return c.html(200, finalOutput)
-        })
-      }
-    })
+        }
+        return ''
+      })()
+      const finalOutput = renderInLayout(fname, str)
+      return c.html(200, finalOutput)
+    } catch (e) {
+      throw new BadRequestError(`${e}`)
+    }
   }
 }
 

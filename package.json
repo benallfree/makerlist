@@ -2,29 +2,24 @@
   "name": "makerlist",
   "type": "module",
   "scripts": {
-    "dev": "serve -s app",
+    "dev": "gobot pocketbase --dir=pb_data --hooksDir=app/pb_hooks --migrationsDir=app/pb_migrations --publicDir=app/pb_public --dev serve",
     "deploy": "bun ./deploy.ts"
   },
   "devDependencies": {
     "@samkirkland/ftp-deploy": "^1.2.4",
     "@types/bun": "latest",
     "dotenv": "^16.4.5",
+    "gobot": "^1.0.0-alpha.41",
     "prettier": "^3.3.3",
-    "prettier-plugin-ejs": "^1.0.3",
     "serve": "^14.2.3"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
-  "dependencies": {
-    "convex": "^1.14.4"
-  },
+  "dependencies": {},
   "prettier": {
     "semi": false,
     "singleQuote": true,
-    "trailingComma": "es5",
-    "plugins": [
-      "prettier-plugin-ejs"
-    ]
+    "trailingComma": "es5"
   }
 }

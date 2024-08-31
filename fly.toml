@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for pocketpages on 2024-08-30T11:11:13-07:00
+# fly.toml app configuration file generated for makerlist on 2024-08-30T22:41:24-07:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -7,6 +7,10 @@ app = 'makerlist'
 primary_region = 'sjc'
 
 [build]
+
+[[mounts]]
+  source = 'pb_data'
+  destination = '/pb_data'
 
 [http_service]
   internal_port = 8090
@@ -20,7 +24,3 @@ primary_region = 'sjc'
   memory = '1gb'
   cpu_kind = 'shared'
   cpus = 1
-
-[mounts]
-  source = "pb_data"
-  destination = "/pb_data"

@@ -1,7 +1,6 @@
-<div>
-  slug page
-  <br />
-  <div>
-    <code><%= JSON.stringify({params}) %></code>
-  </div>
-</div>
+<% if (data.maker) { %>
+  <%- include(`maker.ejs`, context) %>
+<% } %>
+<% if (data.app) { %>
+  <%- include(`app.ejs`, context) %>
+<% } %>

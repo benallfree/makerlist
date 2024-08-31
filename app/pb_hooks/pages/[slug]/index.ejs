@@ -1,7 +1,7 @@
 <% if (data.maker) { %>
   <% dbg(`***`,{data}) %>
-  <%- include(`maker.ejs`, context) %>
+  <%- include(`_maker.ejs`, context) %>
 <% } %>
 <% if (data.app) { %>
-  <%- include(`app.ejs`, context) %>
+  <%- include(`_app.ejs`, context) %>
 <% } %>

@@ -30,7 +30,7 @@ const apps = maker.expand.apps_via_maker
           <ul class="space-y-2 mt-2 text-left">
             <% apps.forEach(app => { %>
               <li class="pl-4 border-l-2 border-primary">
-                <a href="/<%= maker.slug %>/<%= app.slug %>" class="text-primary hover:underline"><%= app.name %></a>
+                <a href="/<%= app.slug %>" class="text-primary hover:underline"><%= app.name %></a>
               </li>
             <% }) %>
           </ul>

@@ -1,0 +1,42 @@
+<% 
+const { formatNumber } = requirePrivate('formatNumber.js')
+const { maker } = data
+const apps = maker.expand.apps_via_maker
+%>
+<div class="hero min-h-screen bg-base-200">
+  <div class="hero-content text-center">
+    <div class="max-w-xl">
+      <h1 class="text-4xl font-bold">
+        <a href="/<%= maker.slug %>" class="hover:text-primary"><%= maker.name %></a>
+        <% if (maker.x) { %>
+          <a
+            href="https://x.com/<%= maker.x %>"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="ml-2 text-blue-500 hover:text-blue-700"
+          >
+            <i class="fa-brands fa-x-twitter"></i>
+          </a>
+        <% } %>
+      </h1>
+      <p class="py-4 text-lg text-gray-700"><%= maker.description %></p>
+      <p class="text-md text-gray-600 mb-6">
+        <i class="fa-solid fa-dollar-sign mr-1"></i><%= formatNumber(maker.mrr) %> mrr
+      </p>
+      
+      <% if (apps.length > 0) { %>
+        <div class="mt-8">
+          <h6 class="text-md font-medium">Apps</h6>
+          <ul class="space-y-2 mt-2 text-left">
+            <% apps.forEach(app => { %>
+              <li class="pl-4 border-l-2 border-primary">
+                <a href="/<%= maker.slug %>/<%= app.slug %>" class="text-primary hover:underline"><%= app.name %></a>
+              </li>
+            <% }) %>
+          </ul>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+  

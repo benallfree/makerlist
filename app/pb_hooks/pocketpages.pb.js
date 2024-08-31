@@ -17,7 +17,8 @@ onAfterBootstrap((e) => {
   })
 
   const addressableFiles = physicalFiles.filter(
-    (f) => !$filepath.base(f).startsWith(`+`)
+    (f) =>
+      !$filepath.base(f).startsWith(`+`) && !$filepath.base(f).startsWith(`_`)
   )
 
   // dbg({ addressableFiles })
